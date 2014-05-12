@@ -8,7 +8,7 @@ import (
 )
 
 //matches lines such as: " - 1230 - 3: category: what I did during this time"
-const TimeMatch = "\\s+-\\s?(\\d+)\\s?-\\s?(\\d+)\\s?:\\s?(.*?):"
+const TimeMatch = "\\s*?-\\s?(\\d+)\\s?-\\s?(\\d+)\\s?:\\s?(.*?):"
 
 type TimeOfDay struct {
 	TimeString string

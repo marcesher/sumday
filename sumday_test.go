@@ -2,10 +2,10 @@ package sumday_test
 
 import (
 	"fmt"
+	"time"
 	. "github.com/marcesher/sumday"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"time"
 )
 
 var _ = Describe("SumDay", func() {
@@ -73,6 +73,16 @@ var _ = Describe("SumDay", func() {
 		})
 	})
 
+	Context("ParseLine makes TimeOfDays for lines that do not start with spaces", func() {
+		It("should create TimeOfDays from strings such as '- 2 - 3: RM: Weekly RM Meeting'", func() {
+			start, end, cat := ParseLine("- 2 - 3: cfgov: Weekly RM Meeting")
+			fmt.Printf("start %v, end %v, cat %v\n", start, end, cat)
+			Expect(cat).To(Equal("cfgov"))
+			duration := end.Time.Sub(start.Time)
+			Expect(duration.Hours()).To(Equal(1.0))
+		})
+	})
+
 	Context("SumDay sums durations for each category during a day", func() {
 
 		input :=
@@ -97,6 +107,13 @@ var _ = Describe("SumDay", func() {
 		It("should group valid lines on categories", func() {
 			res := SumDay(input)
 			fmt.Printf("Result is %v\n\n", res)
+			exp := map[string]float64{
+				"team":  0.75,
+				"rm":    3.5,
+				"cfgov": 1.25,
+				"20":    1.5,
+			}
+			Expect(res).To(Equal(exp))
 		})
 
 	})
