@@ -1,13 +1,14 @@
 package sumday
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
-//matches lines such as: " - 1230 - 3: category: what I did during this time"
+//TimeMatch is a regex that matches lines such as: " - 1230 - 3: category: what I did during this time"
 const TimeMatch = "\\s*?-\\s?(\\d+)\\s?-\\s?(\\d+)\\s?:\\s?(.*?):"
 
 type TimeOfDay struct {
@@ -16,6 +17,12 @@ type TimeOfDay struct {
 	Hour       int
 	Minutes    int
 	Time       time.Time
+}
+
+type Task struct {
+	Start    *TimeOfDay
+	End      *TimeOfDay
+	Category string
 }
 
 func NewTimeOfDay(time string) *TimeOfDay {
@@ -63,13 +70,19 @@ func MakeTimes(start, end string) (*TimeOfDay, *TimeOfDay) {
 	return s, e
 }
 
-//ParseLine Takes a line such as  ' - 2 - 3: RM: Weekly RM Meeting' and returns a Duration and category
+//ParseLine Takes a line such as  ' - 2 - 3: RM: Weekly RM Meeting' and returns a Task representing start, end, and category
 //Categories are normalized by being lowercased and having all non-alpha chars removed
-func ParseLine(input string) (start *TimeOfDay, end *TimeOfDay, category string) {
+
+func ParseLine(input string) Task {
 	re := regexp.MustCompile(TimeMatch)
 	matches := re.FindStringSubmatch(input)
+
+	if len(matches) == 0 {
+		return Task{NewTimeOfDay("0:00"), NewTimeOfDay("0:00"), "UNKNOWN CATEGORY"}
+	}
+
 	s, e := MakeTimes(strings.TrimSpace(matches[1]), strings.TrimSpace(matches[2]))
-	return s, e, Normalize(matches[3])
+	return Task{s, e, Normalize(matches[3])}
 }
 
 //ParseAllLines takes a block of lines for a given day (see example below) and returns a map of summed durations keyed on category
@@ -90,9 +103,13 @@ func SumDay(input string) map[string]float64 {
 	re := regexp.MustCompile(TimeMatch)
 
 	for _, v := range strings.Split(input, "\n") {
-		if re.MatchString(v) {
-			start, end, cat := ParseLine(v)
-			hours[cat] += end.Time.Sub(start.Time).Hours()
+		if strings.TrimSpace(v) == "" {
+			continue
+		} else if re.MatchString(v) {
+			task := ParseLine(v)
+			hours[task.Category] += task.End.Time.Sub(task.Start.Time).Hours()
+		} else {
+			fmt.Println("Could not parse line! ", v)
 		}
 	}
 	return hours

@@ -80,21 +80,31 @@ func TestSumday(t *testing.T) {
 
 	Convey("ParseLine makes TimeOfDays", t, func() {
 		Convey("should create TimeOfDays from strings such as ' - 2 - 3: RM: Weekly RM Meeting'", func() {
-			start, end, cat := ParseLine(" - 2 - 3: cfgov: Weekly RM Meeting")
-			fmt.Printf("start %v, end %v, cat %v\n", start, end, cat)
-			So(cat, ShouldEqual, "cfgov")
-			duration := end.Time.Sub(start.Time)
+			task := ParseLine(" - 2 - 3: cfgov: Weekly RM Meeting")
+			fmt.Printf("start %v, end %v, cat %v\n", task.Start, task.End, task.Category)
+			So(task.Category, ShouldEqual, "cfgov")
+			duration := task.End.Time.Sub(task.Start.Time)
 			So(duration.Hours(), ShouldEqual, 1.0)
 		})
 	})
 
 	Convey("ParseLine makes TimeOfDays for lines that do not start with spaces", t, func() {
 		Convey("should create TimeOfDays from strings such as '- 2 - 3: RM: Weekly RM Meeting'", func() {
-			start, end, cat := ParseLine("- 2 - 3: cfgov: Weekly RM Meeting")
-			fmt.Printf("start %v, end %v, cat %v\n", start, end, cat)
-			So(cat, ShouldEqual, "cfgov")
-			duration := end.Time.Sub(start.Time)
+			task := ParseLine("- 2 - 3: cfgov: Weekly RM Meeting")
+			fmt.Printf("start %v, end %v, cat %v\n", task.Start, task.End, task.Category)
+			So(task.Category, ShouldEqual, "cfgov")
+			duration := task.End.Time.Sub(task.Start.Time)
 			So(duration.Hours(), ShouldEqual, 1.0)
+		})
+	})
+
+	Convey("ParseLine makes TimeOfDays for lines that do not start with spaces", t, func() {
+		Convey("emit meaningful error when pattern doesn't match in strings such as '- 2 - 3: No category present'", func() {
+			task := ParseLine("- 2 - 3: Long meeting whoops no category")
+			fmt.Printf("start %v, end %v, cat %v\n", task.Start, task.End, task.Category)
+			So(task.Category, ShouldEqual, "UNKNOWN CATEGORY")
+			duration := task.End.Time.Sub(task.Start.Time)
+			So(duration.Hours(), ShouldEqual, 0.0)
 		})
 	})
 
